@@ -2,6 +2,8 @@ version: "3.3"
 services:
   redis:
     image: "redis:6.2-alpine"
+    volumes:
+      - redis_volume:/data
 
   web:
     image: magento2_web
@@ -15,19 +17,24 @@ services:
       - db
       - opensearch
       - redis
+    volumes:
+      - web_volume:/var/www/html
+
 
   db:
     image: mariadb:10.4
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: example
+    volumes:
+      - db_volume:/var/lib/mysql
 
   opensearch:
     image: opensearchproject/opensearch:1.2.4
     container_name: opensearch
     environment:
       - cluster.name=opensearch-cluster
-      - node.name=opensearch-node1
+      - node.name=opensearch
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -41,3 +48,11 @@ services:
     ports:
       - 9200:9200
       - 9600:9600
+    volumes:
+      - opensearch_volume:/usr/share/opensearch/data
+
+volumes:
+  db_volume:
+  web_volume:
+  redis_volume:
+  opensearch_volume:

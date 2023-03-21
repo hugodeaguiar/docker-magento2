@@ -37,6 +37,7 @@ services:
       - node.name=opensearch
       - discovery.type=single-node
       - bootstrap.memory_lock=true
+      - plugins.security.disabled=true
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
@@ -47,7 +48,6 @@ services:
         hard: 65536
     ports:
       - 9200:9200
-      - 9600:9600
     volumes:
       - opensearch_volume:/usr/share/opensearch/data
 

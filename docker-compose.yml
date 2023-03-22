@@ -18,7 +18,7 @@ services:
       - opensearch
       - redis
     volumes:
-      - web_volume:/var/www/html
+      - /path/to/magento:/var/www/html
 
 
   db:
@@ -53,6 +53,5 @@ services:
 
 volumes:
   db_volume:
-  web_volume:
   redis_volume:
   opensearch_volume:

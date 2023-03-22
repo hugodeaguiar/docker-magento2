@@ -83,12 +83,40 @@ RUN set -ex; \
 
 WORKDIR ${SITE_PATH}
 
-RUN chown -R nginx:nginx ${SITE_PATH}; \
-    find ${SITE_PATH} -type d -exec chmod 755 {} \; && \
-    find ${SITE_PATH} -type f -exec chmod 644 {} \;
+# RUN chown -R nginx:nginx ${SITE_PATH}; \
+#     find ${SITE_PATH} -type d -exec chmod 755 {} \; && \
+#     find ${SITE_PATH} -type f -exec chmod 644 {} \;
+
+ENV NON_ROOT_USER=magneto
+ENV NON_ROOT_GID="103" \
+    NON_ROOT_UID="1003" \    
+    NON_ROOT_WORK_DIR=/opt/local/${NON_ROOT_USER} \    
+    NON_ROOT_HOME_DIR=/home/${NON_ROOT_USER}
+    RUN groupadd -g 65532 nonroot && useradd -m -s $NON_ROOT_HOME_DIR -u 65532 $NON_ROOT_USER -g nonroot; \
+        usermod -a -G www-data ${NON_ROOT_USER}
+
+RUN chown -R ${NON_ROOT_USER}:www-data ${SITE_PATH} && chmod -R 755 ${SITE_PATH} && \
+        chown -R ${NON_ROOT_USER}:www-data /var/cache/nginx && \
+        chown -R ${NON_ROOT_USER}:www-data /var/log/nginx && \
+        chown -R ${NON_ROOT_USER}:www-data /etc/nginx/conf.d && \
+        mkdir /etc/supervisord && \
+        chown -R ${NON_ROOT_USER}:www-data /etc/supervisord && \
+        chown -R ${NON_ROOT_USER}:www-data /var/run/
+
+RUN touch /var/run/supervisord.pid && \
+        chown -R ${NON_ROOT_USER}:www-data /var/run/supervisord.pid;
+
+RUN touch /var/run/nginx.pid && \
+        chown -R ${NON_ROOT_USER}:www-data /var/run/nginx.pid; \
+        chmod g+wx /var/log/; \    
+        mkdir /opt/local/ && chmod g+wx /opt/local/
+
+USER ${NON_ROOT_USER}
 
 COPY ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./config/nginx.conf /etc/nginx/nginx.conf
+COPY ./config/nginx-default.conf /etc/nginx/conf.d/default.conf
+COPY ./config/php-fpm.conf /etc/php/${PHP_VER}/fpm/pool.d/zzz-custom.conf
 
 EXPOSE 80
 
